@@ -10,31 +10,8 @@ import (
 	"strconv"
 
 	"rph/state"
+	"rph/utils"
 )
-
-type progressWriter struct {
-	total      int
-	downloaded int
-	file       *os.File
-	reader     io.Reader
-	onProgress func(float64)
-}
-
-func (pw *progressWriter) Start() {
-	// TeeReader calls pw.Write() each time a new response is received
-	_, err := io.Copy(pw.file, io.TeeReader(pw.reader, pw))
-	if err != nil {
-		slog.Error("Error in progress writer", "error", progressErrMsg{err})
-	}
-}
-
-func (pw *progressWriter) Write(p []byte) (int, error) {
-	pw.downloaded += len(p)
-	if pw.total > 0 && pw.onProgress != nil {
-		pw.onProgress(float64(pw.downloaded) / float64(pw.total))
-	}
-	return len(p), nil
-}
 
 type asset struct {
 	Name               string `json:"name"`
@@ -104,7 +81,7 @@ func getTemplateArchive(filename string, force bool, version string) {
 		return
 	}
 
-	err = downloadFile(downloadURL)
+	err = utils.DownloadFile(downloadURL, filepath.Join(state.CachePath, zipFile))
 	if err != nil {
 		slog.Error("Error downloading archive file", "error", err)
 		os.Exit(1)

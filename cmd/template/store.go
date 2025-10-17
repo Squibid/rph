@@ -5,13 +5,10 @@ import (
 	"errors"
 	"io/fs"
 	"log/slog"
-	"net/http"
 	"os"
 	"path/filepath"
 	"rph/state"
 
-	"github.com/charmbracelet/bubbles/progress"
-	tea "github.com/charmbracelet/bubbletea"
 	"github.com/mholt/archives"
 )
 
@@ -32,57 +29,6 @@ func LoadArchiveVersion() (string, error) {
 		return "", err
 	}
 	return string(data), nil
-}
-
-func downloadFile(url string) error {
-	var progressBar = true
-
-	// Create the file
-	out, err := os.Create(filepath.Join(state.CachePath, zipFile))
-	if err != nil {
-		return err
-	}
-	defer out.Close()
-
-	// Get the data
-	resp, err := http.Get(url)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-
-	if resp.ContentLength <= 0 {
-		slog.Warn("Can't parse content length, no progress bar will be shown.")
-		progressBar = false
-	}
-
-	var p *tea.Program
-	pw := &progressWriter{
-		total:  int(resp.ContentLength),
-		file:   out,
-		reader: resp.Body,
-		onProgress: func(ratio float64) {
-			p.Send(progressMsg(ratio))
-		},
-	}
-
-	m := downloadModel{
-		pw:       pw,
-		progress: progress.New(progress.WithDefaultGradient()),
-	}
-	p = tea.NewProgram(m)
-
-	// start the download
-	go pw.Start()
-
-	if progressBar {
-		if _, err := p.Run(); err != nil {
-			slog.Error("Error starting the progress bar", "error", err)
-		}
-	}
-
-	return err
 }
 
 func OpenArchive(ctx context.Context) (fsys fs.FS, err error) {

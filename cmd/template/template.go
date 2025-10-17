@@ -3,12 +3,15 @@ package template
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io/fs"
 	"log/slog"
 	"os"
 	"path/filepath"
 	"regexp"
 	"rph/state"
+	"rph/utils"
+	"strings"
 )
 
 type TemplateOptions struct {
@@ -19,7 +22,7 @@ type TemplateOptions struct {
 	DesktopSupport *bool
 }
 
-type wpilibPreferences struct {
+type WpilibPreferences struct {
 	CppIntellisense bool `json:"enableCppIntellisense"`
 	Lang string `json:"currentLanguage"`
 	Year string `json:"projectYear"`
@@ -85,7 +88,7 @@ func GenerateProject(opts TemplateOptions) {
 		defer file.Close()
 
 		{ // scope it so I can jump over it
-			var p wpilibPreferences
+			var p WpilibPreferences
 			decoder := json.NewDecoder(file)
 			err = decoder.Decode(&p)
 			if err != nil {
@@ -188,14 +191,14 @@ func GenerateProject(opts TemplateOptions) {
 
 		if strings.HasPrefix(projType, "xrp") {
 			url := fmt.Sprintf("https://raw.githubusercontent.com/wpilibsuite/allwpilib/%s/xrpVendordep/XRPVendordep.json", version)
-			err = fetchWPIDep(url, filepath.Join(vendordepDir, "XRPVendordep.json"))
+			err = utils.DownloadFile(url, filepath.Join(vendordepDir, "XRPVendordep.json"))
 			if err != nil {
 				slog.Error("Failed to download required vendor dep you should download it yourself", "url", url, "error", err)
 				return
 			}
 		} else if strings.HasPrefix(projType, "romi") {
 			url := fmt.Sprintf("https://raw.githubusercontent.com/wpilibsuite/allwpilib/%s/romiVendordep/RomiVendordep.json", version)
-			err = fetchWPIDep(url, filepath.Join(vendordepDir, "RomiVendordep.json"))
+			err = utils.DownloadFile(url, filepath.Join(vendordepDir, "RomiVendordep.json"))
 			if err != nil {
 				slog.Error("Failed to download required vendor dep you should download it yourself", "url", url, "error", err)
 				return
@@ -203,35 +206,11 @@ func GenerateProject(opts TemplateOptions) {
 		} else if strings.HasPrefix(projType, "command") {
 			// TODO: make sure there's no other project types this has to work with
 			url := fmt.Sprintf("https://raw.githubusercontent.com/wpilibsuite/allwpilib/%s/wpilibNewCommands/WPILibNewCommands.json", version)
-			err = fetchWPIDep(url, filepath.Join(vendordepDir, "WPILibNewCommands.json"))
+			err = utils.DownloadFile(url, filepath.Join(vendordepDir, "WPILibNewCommands.json"))
 			if err != nil {
 				slog.Error("Failed to download required vendor dep you should download it yourself", "url", url, "error", err)
 				return
 			}
 		}
 	}
-}
-
-func fetchWPIDep(url string, outpath string) error {
-	resp, err := http.Get(url)
-	if err != nil {
-		slog.Error("Failed to download file", "url", url, "error", err)
-		return err
-	}
-	defer resp.Body.Close()
-
-	outFile, err := os.Create(outpath)
-	if err != nil {
-		slog.Error("Failed to create file", "error", err)
-		return err
-	}
-	defer outFile.Close()
-
-	_, err = io.Copy(outFile, resp.Body)
-	if err != nil {
-		slog.Error("Failed to save file", "error", err)
-		return err
-	}
-
-	return nil
 }
