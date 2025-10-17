@@ -1,6 +1,11 @@
 # RPS (Robot Pits Helper)
 Manage your FRC robot code the UNIX way.
 
+## Installing
+You can grab the latest release [here](https://github.com/Squibid/rph/releases/latest).
+Don't worry about the version, all versions should be compatible with all
+versions of wpilib.
+
 ## Quick Start
 Make a new project from a template
 ```sh
