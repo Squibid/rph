@@ -140,4 +140,35 @@ func GenerateProject(opts TemplateOptions) {
 
 		PostGradle:
 	}
+
+	// Generate example deploy file
+	{
+		deployPath := filepath.Join(opts.Dir, "src", "main", "deploy")
+		err := os.Mkdir(deployPath, 0755)
+		if err != nil {
+			slog.Error("Failed to make deploy directory", "error", err)
+			goto PostExampleDeploy
+		}
+
+		{ // Scope it so we can jump over it
+			var exampleTxt string
+			switch (opts.Lang) {
+			case "cpp":
+				exampleTxt = `Files placed in this directory will be deployed to the RoboRIO into the
+				'deploy' directory in the home folder. Use the 'frc::filesystem::GetDeployDirectory'
+				function from the 'frc/Filesystem.h' header to get a proper path relative to the deploy
+				directory.`
+			case "java":
+				exampleTxt = `Files placed in this directory will be deployed to the RoboRIO into the
+				'deploy' directory in the home folder. Use the 'Filesystem.getDeployDirectory' wpilib function
+				to get a proper path relative to the deploy directory.`
+			default:
+				exampleTxt = `Files placed in this directory will be deployed to the RoboRIO into the
+				'deploy' directory in the home folder.`
+			}
+
+			os.WriteFile(deployPath, []byte(exampleTxt), 0644)
+		}
+		PostExampleDeploy:
+	}
 }
