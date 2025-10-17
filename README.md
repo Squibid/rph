@@ -1,4 +1,4 @@
-# RPS (Robot Pits Helper)
+# RPH (Robot Pits Helper)
 Manage your FRC robot code the UNIX way.
 
 ## Installing
