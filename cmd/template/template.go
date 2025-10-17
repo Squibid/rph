@@ -54,7 +54,7 @@ func GenerateProject(opts TemplateOptions) {
 		return
 	}
 
-	subFS, err := fs.Sub(fsys, filepath.Join(opts.Lang, opts.ProjectType))
+	subFS, err := fs.Sub(fsys, path.Join(opts.Lang, opts.ProjectType))
 	if err != nil {
 		slog.Error("Unable to find project template", "template", opts.ProjectType, "error", err)
 	}
