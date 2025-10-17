@@ -171,4 +171,67 @@ func GenerateProject(opts TemplateOptions) {
 		}
 		PostExampleDeploy:
 	}
+
+	// Download the wpilib non-maven project specific vendor deps
+	// FIXME: these should all be cached with the deleted vendor deps, but I don't
+	// have time to do that right now so this will do for now.
+	{
+		projType := strings.ToLower(opts.ProjectType)
+		vendordepDir := filepath.Join(opts.Dir, "vendordeps")
+		os.Mkdir(vendordepDir, 0755)
+
+		version, err := LoadArchiveVersion()
+		if err != nil {
+			slog.Error("Unable to get arhive version", "error", err)
+			return
+		}
+
+		if strings.HasPrefix(projType, "xrp") {
+			url := fmt.Sprintf("https://raw.githubusercontent.com/wpilibsuite/allwpilib/%s/xrpVendordep/XRPVendordep.json", version)
+			err = fetchWPIDep(url, filepath.Join(vendordepDir, "XRPVendordep.json"))
+			if err != nil {
+				slog.Error("Failed to download required vendor dep you should download it yourself", "url", url, "error", err)
+				return
+			}
+		} else if strings.HasPrefix(projType, "romi") {
+			url := fmt.Sprintf("https://raw.githubusercontent.com/wpilibsuite/allwpilib/%s/romiVendordep/RomiVendordep.json", version)
+			err = fetchWPIDep(url, filepath.Join(vendordepDir, "RomiVendordep.json"))
+			if err != nil {
+				slog.Error("Failed to download required vendor dep you should download it yourself", "url", url, "error", err)
+				return
+			}
+		} else if strings.HasPrefix(projType, "command") {
+			// TODO: make sure there's no other project types this has to work with
+			url := fmt.Sprintf("https://raw.githubusercontent.com/wpilibsuite/allwpilib/%s/wpilibNewCommands/WPILibNewCommands.json", version)
+			err = fetchWPIDep(url, filepath.Join(vendordepDir, "WPILibNewCommands.json"))
+			if err != nil {
+				slog.Error("Failed to download required vendor dep you should download it yourself", "url", url, "error", err)
+				return
+			}
+		}
+	}
+}
+
+func fetchWPIDep(url string, outpath string) error {
+	resp, err := http.Get(url)
+	if err != nil {
+		slog.Error("Failed to download file", "url", url, "error", err)
+		return err
+	}
+	defer resp.Body.Close()
+
+	outFile, err := os.Create(outpath)
+	if err != nil {
+		slog.Error("Failed to create file", "error", err)
+		return err
+	}
+	defer outFile.Close()
+
+	_, err = io.Copy(outFile, resp.Body)
+	if err != nil {
+		slog.Error("Failed to save file", "error", err)
+		return err
+	}
+
+	return nil
 }
