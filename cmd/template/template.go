@@ -111,7 +111,7 @@ func GenerateProject(opts TemplateOptions) {
 		PostJson:
 	}
 
-	// This is a big one
+	// Enable desktop support
 	{
 		buildGradleFile := filepath.Join(opts.Dir, "build.gradle")
     in, err := os.ReadFile(buildGradleFile)
