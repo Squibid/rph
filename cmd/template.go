@@ -26,6 +26,10 @@ options in using the following flags:
 Example:
 rph template --lang=java --type=commandbased --dir=MyRobot --team=5438 --desktopSupport=false`,
 
+	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		// This is a noop to stop the root command from preventing us from making
+		// a new robot project
+	},
 	PreRun: func(cmd *cobra.Command, args []string) {
 		template.Fetch(false, "keep")
 	},
